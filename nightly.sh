@@ -1,8 +1,10 @@
 #!/bin/bash
-echo -n Nightly Maintenance started: 
+echo -n Nightly Maintenance started:
 date
 backup="/var/www/peertube/storage/backup"
 ptdir="/var/www/peertube"
+echo ==== update latest youtube dl ====
+/usr/bin/npm rebuild youtube-dl --prefix /var/www/peertube/PeerTube
 echo ==== Copying current files to backup directory ====
 cp $ptdir/config/*.yaml $backup/config/
 cp $ptdir/config/*.json $backup/config/
@@ -20,5 +22,5 @@ rsync -Pur $ptdir/storage/* $ptdir/offsitestorage/
 echo ==== deleting local videos older than a week  ====
 find $ptdir/storage/videos/* -mtime +7 -exec rm {} \;
 find $ptdir/storage/streaming-playlists/hls/* -mtime +7 -exec rm -r {} \;
-echo -n Nightly Maintenance ended: 
+echo -n Nightly Maintenance ended:
 date
