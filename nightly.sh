@@ -14,9 +14,9 @@ cp /etc/systemd/system/peertube.service $backup/services/
 crontab -l > $backup/crontab.backup
 echo ==== Backing up database  ====
 pg_dump -Fc peertube_prod > $backup/peertube_prod-dump.db
-cd $ptdir/storage
 echo ==== synching offsite storage  ====
-rsync -Pur * $ptdir/offsitestorage/
+#replace destination folder with specific server address to avoid rsync reliance
+rsync -Pur $ptdir/storage/* $ptdir/offsitestorage/
 echo ==== deleting local videos older than a week  ====
 find $ptdir/storage/videos/* -mtime +7 -exec rm {} \;
 find $ptdir/storage/streaming-playlists/hls/* -mtime +7 -exec rm -r {} \;
