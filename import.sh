@@ -5,22 +5,44 @@ cd /var/www/peertube/peertube-latest
 watch="/var/www/peertube/incoming"
 #  video directory to store files while they are being imported
 working="/var/www/peertube/working"
-echo Script Starting
-while true; do
+#  peertube video folder
+videos="/var/www/peertube/storage/videos"
+echo ------- Script Starting -------------
+while true
+do
         now=$(date)
-        echo -n $now :
+        echo $now 
+        #Check videos folder and send any new ones off to be transcoded
+        if [ "$(ls -A $videos)" ]
+        then
+            for fileName in $videos/*.mp4
+            do
+                if grep -Fxq "$fileName" /var/www/peertube/storage/logs/transferedUUID.log
+                then
+                        #echo "already offloaded $fileName"
+                else
+                        rsync -Pur -e "ssh -i /var/www/peertube/trans" /var/www/peertube/storage/videos/$fileName red@172.111.140.236:/home/red/totranscode/
+                        #todo less hacky way to get uuid from filename.
+                        echo ${filename:33:36} >> /var/www/peertube/storage/logs/transferedUUID.log
+                fi
+            done
+        fi    
         #delete any leftovers in working folder from last import run
-        if [ "$(ls -A $working)" ]; then
+        if [ "$(ls -A $working)" ]
+        then
                 echo deleting old contents
                 rm $working/*.mp4
         fi
         # check for new files to import
-        if [ "$(ls -A $watch)" ]; then
+        if [ "$(ls -A $watch)" ]
+        then
                 mv $watch/*.mp4 $working
-                for fileName in $working/*.mp4; do
+                for fileName in $working/*.mp4
+                do
                         #abort out if there is nothing to process
-                        if [[ " $fileName " == " $working/*.mp4 " ]];
-                                then continue
+                        if [[ " $fileName " == " $working/*.mp4 " ]]
+                        then 
+                                continue
                         fi
                         #TODO less hacky fancy string stuff
                         uuid=${fileName:26:36}
