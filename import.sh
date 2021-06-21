@@ -11,26 +11,26 @@ echo ------- Script Starting -------------
 while true
 do
         now=$(date)
-        echo $now 
+        echo $now checking for new videos
         #Check videos folder and send any new ones off to be transcoded
         if [ "$(ls -A $videos)" ]
         then
             for fileName in $videos/*.mp4
             do
-                if grep -Fxq "$fileName" /var/www/peertube/storage/logs/transferedUUID.log
+                if !( grep -Fxq "$fileName" /var/www/peertube/storage/logs/transferedUUID.log )
                 then
-                        #echo "already offloaded $fileName"
-                else
-                        rsync -Pur -e "ssh -i /var/www/peertube/trans" /var/www/peertube/storage/videos/$fileName red@172.111.140.236:/home/red/totranscode/
+                        rsync -Pur -e "ssh -i /var/www/peertube/trans" $fileName red@172.111.140.236:/home/red/totranscode/
                         #todo less hacky way to get uuid from filename.
                         echo ${filename:33:36} >> /var/www/peertube/storage/logs/transferedUUID.log
                 fi
             done
-        fi    
+        fi
+        echo $now checking for videos to import
+
         #delete any leftovers in working folder from last import run
         if [ "$(ls -A $working)" ]
         then
-                echo deleting old contents
+                #echo deleting old contents
                 rm $working/*.mp4
         fi
         # check for new files to import
@@ -41,7 +41,7 @@ do
                 do
                         #abort out if there is nothing to process
                         if [[ " $fileName " == " $working/*.mp4 " ]]
-                        then 
+                        then
                                 continue
                         fi
                         #TODO less hacky fancy string stuff
