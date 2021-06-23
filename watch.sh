@@ -1,4 +1,5 @@
 #!/bin/bash
+#deprecated, this was a bad idea, just using import script now.
 echo -n Starting to watch : 
 date
 watch="/var/www/peertube/storage/videos"
