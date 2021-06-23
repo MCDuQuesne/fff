@@ -25,20 +25,20 @@ do
         /usr/bin/ffmpeg -i $fileName \
                 -y -acodec copy -vcodec libx264 -threads 8 -f mp4 -movflags faststart \
                 -max_muxing_queue_size 1024 -map_metadata -1 -b_strategy 1 -bf 16 -pix_fmt yuv420p \
-                -vf scale=w=-1:h=144 -preset veryfast -crf 49 \
+                -vf scale=w=-1:h=144 -preset veryfast -crf 20 \
                 -level:v 3.1 -g:v 60 -hls_time 4 -hls_list_size 0 -hls_playlist_type vod \
                 -hls_segment_filename /home/red/done/$uuid-small.mp4 \
                 -hls_segment_type fmp4 -f hls -hls_flags single_file temp.m3u8
         /usr/bin/ffmpeg -i $fileName \
                 -y -acodec copy -vcodec libx264 -threads 8 -f mp4 -movflags faststart \
                 -max_muxing_queue_size 1024 -map_metadata -1 -b_strategy 1 -bf 16 -pix_fmt yuv420p \
-                -vf scale=w=-1:h=64 -preset veryslow -crf 18 \
+                -vf scale=w=-1:h=64 -preset veryfast -crf 42 \
                 -level:v 3.1 -g:v 60 -hls_time 4 -hls_list_size 0 -hls_playlist_type vod \
                 -hls_segment_filename /home/red/done/$uuid-tiny.mp4 \
                 -hls_segment_type fmp4 -f hls -hls_flags single_file temp.m3u8
+        rsync -Purv -e "ssh -i /home/red/red.pem" /home/red/done/*.mp4 peertube@peertube.red:/var/www/peertube/incoming/
         mv $fileName /home/red/todelete/
+        mv /home/red/done/*.mp4 /home/red/todelete
     done
-    rsync -Purv -e "ssh -i /home/red/red.pem" /home/red/done/*.mp4 peertube@peertube.red:/var/www/peertube/incoming/
-    mv /home/red/done/*.mp4 /home/red/todelete
     sleep 600
 done
