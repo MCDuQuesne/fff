@@ -17,11 +17,12 @@ do
         then
             for fileName in $videos/*.mp4
             do
-                if !( grep -Fxq "$fileName" /var/www/peertube/storage/logs/transferedUUID.log )
+                uuid=${fileName:33:36}
+                if !( grep -Fxq "$uuid" /var/www/peertube/storage/logs/transferedUUID.log )
                 then
                         rsync -Pur -e "ssh -i /var/www/peertube/trans" $fileName red@172.111.140.236:/home/red/totranscode/
                         #todo less hacky way to get uuid from filename.
-                        echo ${filename:33:36} >> /var/www/peertube/storage/logs/transferedUUID.log
+                        echo "$uuid" >> /var/www/peertube/storage/logs/transferedUUID.log
                 fi
             done
         fi
