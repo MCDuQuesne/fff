@@ -15,18 +15,17 @@ securekey="/var/www/peertube/trans"
 transferlog="/var/www/peertube/storage/logs/transferedUUID.log"
 #  location of peertube configuration
 configdir="/var/www/peertube/config"
-echo -n Checking for new videos :
-date
 while true
 do
-        echo $now checking for new videos
+        echo -n Checking for new videos :
+        date
         #Check videos folder and send any new ones off to be transcoded
         if [ "$(ls -A $videos)" ]
         then
             for fileName in $videos/*.mp4
             do
                 uuid=${fileName:33:36}
-                if !( grep -Fxq "$uuid" transferlog )
+                if !( grep -Fxq "$uuid" $transferlog )
                 then
                         rsync -Pur -e "ssh -i $securekey" $fileName $offsitetarget
                         #add UUID to list of files already sent
@@ -57,7 +56,7 @@ do
                         now=$(date -u +"%Y-%m-%dT%H:%M:%S.%NZ")
                         # needs work, uncomment and edit to add message about creating import job to audit log on instance
                         # echo \{\"level\":\"audit\",\"message\":\"\{\\\"user\\\":\\\"remote\\\",\\\"domain\\\":\\\"videos\\\",\\\"action\\\":\\\"upload\\\",\\\"video-uuid\\\":\\\"$uuid\\\"\}\",\"timestamp\":\"$now\",\"label\":\"peertube.red:443\"\}>>/var/www/peertube/storage/logs/peertube-audit.log
-                        NODE_CONFIG_DIR=configdir NODE_ENV=production npm run create-import-video-file-job -- -v $uuid -i $fileName
+                        NODE_CONFIG_DIR=$configdir NODE_ENV=production npm run create-import-video-file-job -- -v $uuid -i $fileName
                 done
         fi
         echo -n Done creating import jobs: 
