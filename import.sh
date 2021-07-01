@@ -7,10 +7,18 @@ watch="/var/www/peertube/incoming"
 working="/var/www/peertube/working"
 #  peertube video folder
 videos="/var/www/peertube/storage/videos"
-echo ------- Script Starting -------------
+#  path to offsite transcoding folder
+offsitetarget="red@172.111.140.236:/home/red/totranscode/"
+#  private key for SSH tunnel to transcoding server
+securekey="/var/www/peertube/trans"
+#  location of log of all video UUIDs sent offsite for transcoding
+transferlog="/var/www/peertube/storage/logs/transferedUUID.log"
+#  location of peertube configuration
+configdir="/var/www/peertube/config"
+echo -n Checking for new videos :
+date
 while true
 do
-        now=$(date)
         echo $now checking for new videos
         #Check videos folder and send any new ones off to be transcoded
         if [ "$(ls -A $videos)" ]
@@ -18,20 +26,19 @@ do
             for fileName in $videos/*.mp4
             do
                 uuid=${fileName:33:36}
-                if !( grep -Fxq "$uuid" /var/www/peertube/storage/logs/transferedUUID.log )
+                if !( grep -Fxq "$uuid" transferlog )
                 then
-                        rsync -Pur -e "ssh -i /var/www/peertube/trans" $fileName red@172.111.140.236:/home/red/totranscode/
+                        rsync -Pur -e "ssh -i $securekey" $fileName $offsitetarget
+                        #add UUID to list of files already sent
                         #todo less hacky way to get uuid from filename.
-                        echo "$uuid" >> /var/www/peertube/storage/logs/transferedUUID.log
+                        echo "$uuid" >> $transferlog
                 fi
             done
         fi
-        echo $now checking for videos to import
-
+        echo done transferring, checking for videos to import
         #delete any leftovers in working folder from last import run
         if [ "$(ls -A $working)" ]
         then
-                #echo deleting old contents
                 rm $working/*.mp4
         fi
         # check for new files to import
@@ -47,15 +54,13 @@ do
                         fi
                         #TODO less hacky fancy string stuff
                         uuid=${fileName:26:36}
-                        #echo uuid: $uuid
                         now=$(date -u +"%Y-%m-%dT%H:%M:%S.%NZ")
-                        echo $now : Importing $uuid
-                        echo \{\"level\":\"audit\",\"message\":\"\{\\\"user\\\":\\\"remote\\\",\\\"domain\\\":\\\"videos\\\",\\\"action\\\":\\\"upload\\\",\\\"video-uuid\\\":\\\"$uuid\\\"\}\",\"timestamp\":\"$now\",\"label\":\"peertube.red:443\"\}>>/var/www/peertube/storage/logs/peertube-audit.log
-                        NODE_CONFIG_DIR=/var/www/peertube/config NODE_ENV=production npm run create-import-video-file-job -- -v $uuid -i $fileName
+                        # needs work, uncomment and edit to add message about creating import job to audit log on instance
+                        # echo \{\"level\":\"audit\",\"message\":\"\{\\\"user\\\":\\\"remote\\\",\\\"domain\\\":\\\"videos\\\",\\\"action\\\":\\\"upload\\\",\\\"video-uuid\\\":\\\"$uuid\\\"\}\",\"timestamp\":\"$now\",\"label\":\"peertube.red:443\"\}>>/var/www/peertube/storage/logs/peertube-audit.log
+                        NODE_CONFIG_DIR=configdir NODE_ENV=production npm run create-import-video-file-job -- -v $uuid -i $fileName
                 done
-        else
-                now=$(date)
-                echo $now : Nothing Found
         fi
+        echo -n Done creating import jobs: 
+        date
         sleep 600
 done
