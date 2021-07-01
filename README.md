@@ -20,7 +20,7 @@ backup keeps a copy of the original file and all transcoded files
 You need to setup secure key communication between both machines, I used this guide to figure it out 
  http://www.beginninglinux.com/home/server-administration/openssh-keys-certificates-authentication-pem-pub-crt
 in my case I set it up from an account "red" on the transcoding server to "peertube" on the instance and vice versa.
-Make sure all the directory locations at the top of the script are correct, modify it for you key file or any moved directories.
+Make sure all the directory locations at the top of the scripts are correct, modify it for you key file or folders that don't match.
 note:the current hack to get uuid may need to have the numbers changed if the length of the pertinent path changes.
 launch both scripts on reboot with @reboot in peertubes crontab.
 
