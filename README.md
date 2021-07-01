@@ -5,6 +5,7 @@ Tools for making the fediverse more distributed
 Concentrating on PeerTube initially
 
 Offsite Transcoding Project
+===========================
 Step 1, Use bash scripts to offload transcoding from slower VPS machines to faster home machine
 
 In order to avoid being plagued by strange permission issues I use the peertube account on the server
